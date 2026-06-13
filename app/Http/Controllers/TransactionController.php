@@ -110,9 +110,15 @@ class TransactionController extends Controller
 
     private function paginateTransactions(Request $request)
     {
+        $search = $this->normalizeTrxIdSearch($request->input('search'));
+
         return Transaction::query()
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $query->where('trx_id', 'like', '%'.$request->string('search').'%');
+            ->when($search !== '', function ($query) use ($search) {
+                if (Transaction::query()->where('trx_id', $search)->exists()) {
+                    $query->where('trx_id', $search);
+                } else {
+                    $query->where('trx_id', 'like', $search.'%');
+                }
             })
             ->when($request->filled('provider'), function ($query) use ($request) {
                 $query->where('provider', $request->string('provider'));
@@ -123,6 +129,15 @@ class TransactionController extends Controller
             ->orderByDesc('created_at')
             ->paginate(10)
             ->withQueryString();
+    }
+
+    private function normalizeTrxIdSearch(?string $search): string
+    {
+        if ($search === null) {
+            return '';
+        }
+
+        return strtoupper(preg_replace('/[\s\-]+/', '', trim($search)) ?? '');
     }
 
     /**
