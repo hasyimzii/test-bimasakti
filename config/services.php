@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'bimasakti' => [
+        'base_url' => env('BASE_URL'),
+        'secret' => env('SECRET'),
+    ],
+
 ];
